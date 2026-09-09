@@ -1,14 +1,14 @@
 package se.umu.cs.ads.a1.rest;
 
+import org.restlet.Application;
 import org.restlet.Component;
+import org.restlet.Restlet;
 import org.restlet.data.Protocol;
+import org.restlet.routing.Router;
 import se.umu.cs.ads.a1.backend.InMemoryMessengerBackEnd;
 import se.umu.cs.ads.a1.interfaces.Messenger;
-import org.restlet.Application;
 
-// first draft of a rest server
-
-public class RESTServer extends Application {
+public class RESTServer {
 
     private final Component component;
     private final Messenger backend;
@@ -17,13 +17,15 @@ public class RESTServer extends Application {
         this.backend = new InMemoryMessengerBackEnd();
         this.component = new Component();
         this.component.getServers().add(Protocol.HTTP, port);
-        //this.component.getServers().get(0).setAddress("localhost"); // 127.0.0.1
+
+        //this attaches router to the default host
+        this.component.getDefaultHost().attachDefault(new MessengerApplication());
     }
 
     public void start() throws Exception {
         component.start();
         System.out.println("RESTServer running on HTTP port: " + component.getServers().get(0).getPort());
-        //System.out.println("RESTServer running on IP: " + component.getServers().get(0).getAddress());
+        System.out.println("Test URL: http://localhost:" + component.getServers().get(0).getPort() + "/ping");
     }
 
     public void stop() throws Exception {
@@ -37,6 +39,17 @@ public class RESTServer extends Application {
             server.start();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    // class for Restlet routing
+    private static class MessengerApplication extends Application {
+        @Override
+        public Restlet createInboundRoot() {
+            Router router = new Router(getContext());
+            // Test route
+            router.attach("/ping", RESTResource.class);
+            return router;
         }
     }
 }
