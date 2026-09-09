@@ -1,0 +1,98 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>se.umu.cs.ads</groupId>
+    <artifactId>rest-grpc-messenger</artifactId>
+    <version>1.2.6</version>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <restlet.version>2.4.3</restlet.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>maven-central</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+        <repository>
+            <id>maven-restlet</id>
+            <name>Public Online Restlet Repository</name>
+            <url>https://maven.restlet.talend.com</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <!-- Restlet Core Framework -->
+        <dependency>
+            <groupId>org.restlet.jse</groupId>
+            <artifactId>org.restlet</artifactId>
+            <version>${restlet.version}</version>
+        </dependency>
+
+        <!-- Restlet Jackson Extension for JSON serialization -->
+        <dependency>
+            <groupId>org.restlet.jse</groupId>
+            <artifactId>org.restlet.ext.jackson</artifactId>
+            <version>${restlet.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!-- Configure source directory to match project structure -->
+        <sourceDirectory>src</sourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <release>17</release>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                        <arg>-Xlint:unchecked</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>se.umu.cs.ads.a1.Main</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>se.umu.cs.ads.a1.Main</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
