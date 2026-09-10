@@ -18,8 +18,8 @@ public class RESTServer {
         this.component = new Component();
         this.component.getServers().add(Protocol.HTTP, port);
 
-        //this attaches router to the default host
-        this.component.getDefaultHost().attachDefault(new MessengerApplication());
+        // attach the Application routes to the Component server, passing shared backend
+        this.component.getDefaultHost().attachDefault(new MessengerApplication(this.backend));
     }
 
     public void start() throws Exception {
@@ -44,11 +44,21 @@ public class RESTServer {
 
     // class for Restlet routing
     private static class MessengerApplication extends Application {
+        private final Messenger backend;
+
+        public MessengerApplication(Messenger backend) {
+            this.backend = backend;
+        }
+
         @Override
         public Restlet createInboundRoot() {
+            // messenger class is shared with all resource instances
+            getContext().getAttributes().put("messenger", backend);
+
             Router router = new Router(getContext());
-            // Test route
+            // Test routes
             router.attach("/ping", RESTResource.class);
+            router.attach("/hello", RESTResource.class);
             return router;
         }
     }
