@@ -59,6 +59,9 @@ public class RESTServer {
             // Test routes
             router.attach("/ping", RESTResource.class);
             router.attach("/hello", RESTResource.class);
+            // Real? routes
+            router.attach("/store", RESTResource.class); // needs to handle input
+            router.attach("/retrieve", RESTResource.class); // retrieve message with id
             return router;
         }
     }
