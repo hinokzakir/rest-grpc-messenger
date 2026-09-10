@@ -62,6 +62,7 @@ public class RESTServer {
             // Real? routes
             router.attach("/store", RESTResource.class); // needs to handle input
             router.attach("/retrieve", RESTResource.class); // retrieve message with id
+            router.attach("/list-messages", RESTResource.class); // list messages for a user
             return router;
         }
     }
