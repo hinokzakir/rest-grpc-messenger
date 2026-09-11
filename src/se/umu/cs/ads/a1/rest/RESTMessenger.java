@@ -59,7 +59,9 @@ public class RESTMessenger implements Messenger {
 
     @Override
     public void store(Message[] messages) {
-        throw new UnsupportedOperationException("Unimplemented method 'store'");
+        for (Message message : messages) {
+            store(message);
+        }
     }
 
     @Override
@@ -74,7 +76,8 @@ public class RESTMessenger implements Messenger {
 
     @Override
     public void delete(MessageId message) {
-        if (message == null) return;
+        if (message == null)
+            return;
 
         try {
             String msgID = message.toString();
