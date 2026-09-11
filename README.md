@@ -7,4 +7,12 @@ mvn compile
 mvn package
 ```
 
+```bash
+java -cp target/rest-grpc-messenger-1.2.6.jar se.umu.cs.ads.a1.rest.RESTServer
+```
+
+```bash
+./t.sh se.umu.cs.ads.a1.rest.RESTMessenger -logic
+```
+
 

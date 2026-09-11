@@ -6,6 +6,9 @@ import org.restlet.resource.Delete;
 import org.restlet.resource.ServerResource;
 import org.restlet.data.Form;
 import org.restlet.representation.Representation;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import se.umu.cs.ads.a1.interfaces.Messenger;
 import se.umu.cs.ads.a1.types.*;
@@ -20,32 +23,37 @@ public class RESTResource extends ServerResource {
     }
 
     @Get("json")
-    public String represent(Representation entity) {
+    public String represent() {
         String path = getReference().getPath();
-        Form form = new Form(entity);
         if (path.contains("/retrieve")) {
             try {
-                String payload = form.getFirstValue("msgID");
-                MessageId msgID = new MessageId(payload);
-                Message msg = messengerBackend.retrieve(msgID);
+                Form form = getReference().getQueryAsForm();
+                String msgID = form.getFirstValue("msgID");
+                MessageId messageId = new MessageId(msgID);
+                Message msg = messengerBackend.retrieve(messageId);
                 return msg.getContent().toString();
             } catch (Exception e) {
                 return "Error: Could not retrieve message";
             }
         } else if (path.contains("/list-messages")) {
             try {
-                String payload = form.getFirstValue("user");
-                Username user = new Username(payload);
+                Form form = getReference().getQueryAsForm();
+                String username = form.getFirstValue("user");
+                Username user = new Username(username);
                 MessageId[] messages = messengerBackend.listMessages(user);
 
-                String result = "";
-                for (MessageId id : messages) {
-                    result += id.toString() + "\n";
+                ObjectMapper mapper = new ObjectMapper();
+                ArrayNode arrayNode = mapper.createArrayNode();
+                if (messages != null) {
+                    for (MessageId id : messages) {
+                        arrayNode.add(id.toString());
+                    }
                 }
-                return result;
+                return arrayNode.toString();
             } catch (Exception e) {
-                String payload = form.getFirstValue("user");
-                return "Error: Invalid username: " + payload;
+                Form form = getReference().getQueryAsForm();
+                String username = form.getFirstValue("user");
+                return "Error: Invalid username: " + username;
             }
         } else {
             return "Not Found";
@@ -53,24 +61,25 @@ public class RESTResource extends ServerResource {
     }
 
     @Post("json")
-    public String store(Representation entity) {
+    public String store(JsonNode json) {
         String path = getReference().getPath();
         if (path.contains("/store")) {
             try {
-                Form form = new Form(entity);
-                String message = form.getFirstValue("message");
-                String username = form.getFirstValue("user");
-                // create msg id
-                MessageId msgId = MessageId.construct();
+                String message = (json != null && json.has("message")) ? json.get("message").asText() : null;
+                String username = (json != null && json.has("user")) ? json.get("user").asText() : null;
+                String msgID = (json != null && json.has("msgID")) ? json.get("msgID").asText() : null;
+
+                MessageId msgId = (msgID != null && !msgID.isEmpty()) ? new MessageId(msgID) : MessageId.construct();
                 Content content = new Content(message);
                 Username user = new Username(username);
                 Message msg = new Message(msgId, null, user, null, content, null);
+
                 messengerBackend.store(msg);
-                return "Message:  " + message + " stored successfully, ID: " + msgId.toString() + ", username: " + msg.getUsername();
-            } catch (Exception E) { // catch if the backend cannot store
+                return "Message: " + message + " stored successfully, ID: " + msgId.toString() + ", username: "
+                        + msg.getUsername();
+            } catch (Exception E) {
                 return "Error: Could not store message: " + E.toString();
             }
-                        
         }
         return "Not Found";
     }
