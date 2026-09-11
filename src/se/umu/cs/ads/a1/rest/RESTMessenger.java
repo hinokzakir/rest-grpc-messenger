@@ -98,7 +98,11 @@ public class RESTMessenger implements Messenger {
 
     @Override
     public Message[] retrieve(MessageId[] messages) {
-        throw new UnsupportedOperationException("Unimplemented method 'retrieve'");
+        Message[] returnedMessages = new Message[messages.length];
+        for (int i = 0; i < messages.length; i++) {
+            returnedMessages[i] = retrieve(messages[i]);
+        }
+        return returnedMessages;
     }
 
     @Override
