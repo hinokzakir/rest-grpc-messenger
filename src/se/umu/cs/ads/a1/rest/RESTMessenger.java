@@ -1,10 +1,8 @@
 package se.umu.cs.ads.a1.rest;
 
 import se.umu.cs.ads.a1.interfaces.Messenger;
-import se.umu.cs.ads.a1.types.Message;
-import se.umu.cs.ads.a1.types.MessageId;
-import se.umu.cs.ads.a1.types.Topic;
-import se.umu.cs.ads.a1.types.Username;
+import se.umu.cs.ads.a1.types.*;
+import se.umu.cs.ads.a1.types.Data;
 
 import org.restlet.representation.Representation;
 import org.restlet.resource.ClientResource;
@@ -66,7 +64,36 @@ public class RESTMessenger implements Messenger {
 
     @Override
     public Message retrieve(MessageId message) {
-        throw new UnsupportedOperationException("Unimplemented method 'retrieve'");
+        if (message == null)
+            return null;
+
+        try {
+            String msgID = message.toString();
+            ClientResource client = new ClientResource(serverUrl + "/retrieve?msgID=" + msgID);
+            Representation response = client.get();
+
+            // build message from json to message object
+            JsonNode jsonNode = mapper.readTree(response.getText());
+
+            MessageId messageId = (jsonNode.has("msgID") && !jsonNode.get("msgID").isNull())
+                    ? new MessageId(jsonNode.get("msgID").asText()) : message;
+            Timestamp timeStamp = (jsonNode.has("timeStamp") && !jsonNode.get("timeStamp").isNull())
+                    ? new Timestamp(jsonNode.get("timeStamp").asLong()) : Timestamp.now();
+            Username user = (jsonNode.has("user") && !jsonNode.get("user").isNull())
+                    ? new Username(jsonNode.get("user").asText()) : null;
+            Topic topic = (jsonNode.has("topic") && !jsonNode.get("topic").isNull())
+                    ? new Topic(jsonNode.get("topic").asText()) : null;
+            Content content = (jsonNode.has("content") && !jsonNode.get("content").isNull())
+                    ? new Content(jsonNode.get("content").asText()) : null;
+            Data data = (jsonNode.has("data") && !jsonNode.get("data").isNull() && jsonNode.get("data").binaryValue() != null)
+                    ? new Data(jsonNode.get("data").binaryValue()) : Data.EMPTY;
+
+            return new Message(messageId, timeStamp, user, topic, content, data);
+
+        } catch (Exception e) {
+            System.err.println("Error calling /retrieve endpoint: " + e.getMessage());
+        }
+        return null;
     }
 
     @Override

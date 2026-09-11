@@ -8,6 +8,7 @@ import org.restlet.data.Form;
 import org.restlet.representation.Representation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import se.umu.cs.ads.a1.interfaces.Messenger;
@@ -31,9 +32,21 @@ public class RESTResource extends ServerResource {
                 String msgID = form.getFirstValue("msgID");
                 MessageId messageId = new MessageId(msgID);
                 Message msg = messengerBackend.retrieve(messageId);
-                return msg.getContent().toString();
+                // build json object
+                ObjectMapper mapper = new ObjectMapper();
+                ObjectNode messageNode = mapper.createObjectNode();
+                if (msg != null) {
+                    if (msg.getId() != null) messageNode.put("msgID", msg.getId().toString());
+                    if (msg.getTimestamp() != null) messageNode.put("timeStamp", msg.getTimestamp().toString());
+                    if (msg.getUsername() != null) messageNode.put("user", msg.getUsername().toString());
+                    if (msg.getTopic() != null) messageNode.put("topic", msg.getTopic().toString());
+                    if (msg.getContent() != null) messageNode.put("content", msg.getContent().toString());
+                }
+
+                return messageNode.toString();
             } catch (Exception e) {
-                return "Error: Could not retrieve message";
+                e.printStackTrace();
+                return "Error: Could not retrieve message: " + e.getMessage();
             }
         } else if (path.contains("/list-messages")) {
             try {
@@ -67,12 +80,15 @@ public class RESTResource extends ServerResource {
             try {
                 String message = (json != null && json.has("message")) ? json.get("message").asText() : null;
                 String username = (json != null && json.has("user")) ? json.get("user").asText() : null;
+                String topicStr = (json != null && json.has("topic")) ? json.get("topic").asText() : null;
                 String msgID = (json != null && json.has("msgID")) ? json.get("msgID").asText() : null;
 
                 MessageId msgId = (msgID != null && !msgID.isEmpty()) ? new MessageId(msgID) : MessageId.construct();
-                Content content = new Content(message);
-                Username user = new Username(username);
-                Message msg = new Message(msgId, null, user, null, content, null);
+                Timestamp timestamp = Timestamp.now();
+                Content content = (message != null) ? new Content(message) : null;
+                Username user = (username != null) ? new Username(username) : null;
+                Topic topic = (topicStr != null) ? new Topic(topicStr) : null;
+                Message msg = new Message(msgId, timestamp, user, topic, content, Data.EMPTY);
 
                 messengerBackend.store(msg);
                 return "Message: " + message + " stored successfully, ID: " + msgId.toString() + ", username: "
