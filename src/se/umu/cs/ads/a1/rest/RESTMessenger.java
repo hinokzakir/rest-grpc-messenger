@@ -74,7 +74,22 @@ public class RESTMessenger implements Messenger {
 
     @Override
     public void delete(MessageId message) {
-        throw new UnsupportedOperationException("Unimplemented method 'delete'");
+        if (message == null) return;
+
+        try {
+            String msgID = message.toString();
+
+            ClientResource client = new ClientResource(serverUrl + "/delete?msgID=" + msgID);
+            Representation response = client.delete();
+
+            if (response != null) {
+                System.out.println("Delete Server Response: " + response.getText());
+            }
+            client.release();
+        } catch (Exception e) {
+            System.err.println("Error calling /delete endpoint: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Override

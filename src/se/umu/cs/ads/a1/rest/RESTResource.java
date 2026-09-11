@@ -89,13 +89,13 @@ public class RESTResource extends ServerResource {
         String path = getReference().getPath();
         if (path.contains("/delete")) {
             try {
-                Form form = new Form(entity);
+                Form form = getReference().getQueryAsForm();
                 String msgID = form.getFirstValue("msgID");
                 MessageId messageId = new MessageId(msgID);
                 messengerBackend.delete(messageId);
                 return "Message " + msgID + " deleted successfully";
             } catch (Exception e) {
-                Form form = new Form(entity);
+                Form form = getReference().getQueryAsForm();
                 String msgID = form.getFirstValue("msgID");
                 return "Error: Could not delete message: " + msgID;
             }
