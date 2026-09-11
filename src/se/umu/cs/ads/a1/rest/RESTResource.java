@@ -2,6 +2,7 @@ package se.umu.cs.ads.a1.rest;
 
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
+import org.restlet.resource.Delete;
 import org.restlet.resource.ServerResource;
 import org.restlet.data.Form;
 import org.restlet.representation.Representation;
@@ -18,14 +19,13 @@ public class RESTResource extends ServerResource {
         this.messengerBackend = (Messenger) getContext().getAttributes().get("messenger");
     }
 
-    @Get("text/plain")
-    public String represent(String payload) {
+    @Get("json")
+    public String represent(Representation entity) {
         String path = getReference().getPath();
-        if (path.contains("/hello")) {
-            return "hello from rest-server";
-        }
+        Form form = new Form(entity);
         if (path.contains("/retrieve")) {
             try {
+                String payload = form.getFirstValue("msgID");
                 MessageId msgID = new MessageId(payload);
                 Message msg = messengerBackend.retrieve(msgID);
                 return msg.getContent().toString();
@@ -34,6 +34,7 @@ public class RESTResource extends ServerResource {
             }
         } else if (path.contains("/list-messages")) {
             try {
+                String payload = form.getFirstValue("user");
                 Username user = new Username(payload);
                 MessageId[] messages = messengerBackend.listMessages(user);
 
@@ -43,6 +44,7 @@ public class RESTResource extends ServerResource {
                 }
                 return result;
             } catch (Exception e) {
+                String payload = form.getFirstValue("user");
                 return "Error: Invalid username: " + payload;
             }
         } else {
@@ -50,7 +52,7 @@ public class RESTResource extends ServerResource {
         }
     }
 
-    @Post("text/plain")
+    @Post("json")
     public String store(Representation entity) {
         String path = getReference().getPath();
         if (path.contains("/store")) {
@@ -69,6 +71,25 @@ public class RESTResource extends ServerResource {
                 return "Error: Could not store message: " + E.toString();
             }
                         
+        }
+        return "Not Found";
+    }
+
+    @Delete("json")
+    public String delete(Representation entity) {
+        String path = getReference().getPath();
+        if (path.contains("/delete")) {
+            try {
+                Form form = new Form(entity);
+                String msgID = form.getFirstValue("msgID");
+                MessageId messageId = new MessageId(msgID);
+                messengerBackend.delete(messageId);
+                return "Message " + msgID + " deleted successfully";
+            } catch (Exception e) {
+                Form form = new Form(entity);
+                String msgID = form.getFirstValue("msgID");
+                return "Error: Could not delete message: " + msgID;
+            }
         }
         return "Not Found";
     }
