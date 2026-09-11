@@ -29,18 +29,26 @@ public class RESTResource extends ServerResource {
         if (path.contains("/retrieve")) {
             try {
                 Form form = getReference().getQueryAsForm();
-                String msgID = form.getFirstValue("msgID");
+                String msgID = (form != null) ? form.getFirstValue("msgID") : null;
+                if (msgID == null || msgID.isEmpty()) {
+                    return "Error: Missing msgID parameter";
+                }
                 MessageId messageId = new MessageId(msgID);
                 Message msg = messengerBackend.retrieve(messageId);
                 // build json object
                 ObjectMapper mapper = new ObjectMapper();
                 ObjectNode messageNode = mapper.createObjectNode();
                 if (msg != null) {
-                    if (msg.getId() != null) messageNode.put("msgID", msg.getId().toString());
-                    if (msg.getTimestamp() != null) messageNode.put("timeStamp", msg.getTimestamp().toString());
-                    if (msg.getUsername() != null) messageNode.put("user", msg.getUsername().toString());
-                    if (msg.getTopic() != null) messageNode.put("topic", msg.getTopic().toString());
-                    if (msg.getContent() != null) messageNode.put("content", msg.getContent().toString());
+                    if (msg.getId() != null)
+                        messageNode.put("msgID", msg.getId().toString());
+                    if (msg.getTimestamp() != null)
+                        messageNode.put("timeStamp", msg.getTimestamp().toString());
+                    if (msg.getUsername() != null)
+                        messageNode.put("user", msg.getUsername().toString());
+                    if (msg.getTopic() != null)
+                        messageNode.put("topic", msg.getTopic().toString());
+                    if (msg.getContent() != null)
+                        messageNode.put("content", msg.getContent().toString());
                 }
 
                 return messageNode.toString();
@@ -52,7 +60,7 @@ public class RESTResource extends ServerResource {
             try {
                 Form form = getReference().getQueryAsForm();
                 String username = form.getFirstValue("user");
-                Username user = new Username(username);
+                    Username user = new Username(username);
                 MessageId[] messages = messengerBackend.listMessages(user);
 
                 ObjectMapper mapper = new ObjectMapper();
@@ -68,6 +76,44 @@ public class RESTResource extends ServerResource {
                 String username = form.getFirstValue("user");
                 return "Error: Invalid username: " + username;
             }
+
+        } else if (path.contains("/list-users")) {
+            Username[] users = messengerBackend.listUsers();
+            ObjectMapper mapper = new ObjectMapper();
+            ArrayNode arrayNode = mapper.createArrayNode();
+            if (users != null) {
+                for (Username user : users) {
+                    arrayNode.add(user.toString());
+                }
+            }
+            return arrayNode.toString();
+
+        } else if (path.contains("/list-topics")) {
+            try {
+                // check if a username was passed through
+                Form form = getReference().getQueryAsForm();
+                String username = (form != null) ? form.getFirstValue("user") : null;
+                Topic[] topics;
+                if (username != null && !username.isEmpty()) {
+                    Username user = new Username(username);
+                    topics = messengerBackend.listTopics(user);
+                } else {
+                    topics = messengerBackend.listTopics();
+                }
+
+                ObjectMapper mapper = new ObjectMapper();
+                ArrayNode arrayNode = mapper.createArrayNode();
+                if (topics != null) {
+                    for (Topic topic : topics) {
+                        arrayNode.add(topic.toString());
+                    }
+                }
+                return arrayNode.toString();
+
+            } catch (Exception e) {
+                return "Error: Could not list topics: " + e.getMessage();
+            }
+
         } else {
             return "Not Found";
         }

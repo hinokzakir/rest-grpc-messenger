@@ -76,17 +76,24 @@ public class RESTMessenger implements Messenger {
             JsonNode jsonNode = mapper.readTree(response.getText());
 
             MessageId messageId = (jsonNode.has("msgID") && !jsonNode.get("msgID").isNull())
-                    ? new MessageId(jsonNode.get("msgID").asText()) : message;
+                    ? new MessageId(jsonNode.get("msgID").asText())
+                    : message;
             Timestamp timeStamp = (jsonNode.has("timeStamp") && !jsonNode.get("timeStamp").isNull())
-                    ? new Timestamp(jsonNode.get("timeStamp").asLong()) : Timestamp.now();
+                    ? new Timestamp(jsonNode.get("timeStamp").asLong())
+                    : Timestamp.now();
             Username user = (jsonNode.has("user") && !jsonNode.get("user").isNull())
-                    ? new Username(jsonNode.get("user").asText()) : null;
+                    ? new Username(jsonNode.get("user").asText())
+                    : null;
             Topic topic = (jsonNode.has("topic") && !jsonNode.get("topic").isNull())
-                    ? new Topic(jsonNode.get("topic").asText()) : null;
+                    ? new Topic(jsonNode.get("topic").asText())
+                    : null;
             Content content = (jsonNode.has("content") && !jsonNode.get("content").isNull())
-                    ? new Content(jsonNode.get("content").asText()) : null;
-            Data data = (jsonNode.has("data") && !jsonNode.get("data").isNull() && jsonNode.get("data").binaryValue() != null)
-                    ? new Data(jsonNode.get("data").binaryValue()) : Data.EMPTY;
+                    ? new Content(jsonNode.get("content").asText())
+                    : null;
+            Data data = (jsonNode.has("data") && !jsonNode.get("data").isNull()
+                    && jsonNode.get("data").binaryValue() != null)
+                            ? new Data(jsonNode.get("data").binaryValue())
+                            : Data.EMPTY;
 
             return new Message(messageId, timeStamp, user, topic, content, data);
 
@@ -152,12 +159,55 @@ public class RESTMessenger implements Messenger {
 
     @Override
     public Topic[] listTopics() {
-        throw new UnsupportedOperationException("Unimplemented method 'listTopics'");
+        try {
+            ClientResource client = new ClientResource(serverUrl + "/list-topics");
+            Representation response = client.get();
+            if (response != null) {
+                String text = response.getText();
+                JsonNode jsonArray = mapper.readTree(text);
+                client.release();
+
+                if (jsonArray != null && jsonArray.isArray()) {
+                    Topic[] topics = new Topic[jsonArray.size()];
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        topics[i] = new Topic(jsonArray.get(i).asText());
+                    }
+                    return topics;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error calling /list-topics endpoint: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return new Topic[0];
     }
 
     @Override
     public Topic[] listTopics(Username username) {
-        throw new UnsupportedOperationException("Unimplemented method 'listTopics'");
+        if (username == null)
+            return new Topic[0];
+        try {
+            String user = username.toString();
+            ClientResource client = new ClientResource(serverUrl + "/list-topics?user=" + user);
+            Representation response = client.get();
+            if (response != null) {
+                String text = response.getText();
+                JsonNode jsonArray = mapper.readTree(text);
+                client.release();
+
+                if (jsonArray != null && jsonArray.isArray()) {
+                    Topic[] topics = new Topic[jsonArray.size()];
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        topics[i] = new Topic(jsonArray.get(i).asText());
+                    }
+                    return topics;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error calling /list-topics endpoint: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return new Topic[0];
     }
 
     @Override
