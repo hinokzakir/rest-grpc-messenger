@@ -13,12 +13,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class RESTMessenger implements Messenger {
     private String serverUrl = "http://localhost:8000";
     private final ObjectMapper mapper = new ObjectMapper();
+    private ClientResource client;
 
     public RESTMessenger() {
+        this.client = new ClientResource(serverUrl);
     }
 
     public RESTMessenger(String serverUrl) {
         this.serverUrl = serverUrl;
+        this.client = new ClientResource(serverUrl);
     }
 
     // ----------------------------------------------------------
@@ -42,7 +45,7 @@ public class RESTMessenger implements Messenger {
                 jsonNode.put("msgID", message.getId().toString());
 
             // post JSON payload to /store endpoint
-            ClientResource client = new ClientResource(serverUrl + "/store");
+            client.setReference(serverUrl + "/store");
             Representation response = client.post(jsonNode);
 
             if (response != null) {
@@ -69,7 +72,7 @@ public class RESTMessenger implements Messenger {
 
         try {
             String msgID = message.toString();
-            ClientResource client = new ClientResource(serverUrl + "/retrieve?msgID=" + msgID);
+            client.setReference(serverUrl + "/retrieve?msgID=" + msgID);
             Representation response = client.get();
 
             // build message from json to message object
@@ -120,7 +123,7 @@ public class RESTMessenger implements Messenger {
         try {
             String msgID = message.toString();
 
-            ClientResource client = new ClientResource(serverUrl + "/delete?msgID=" + msgID);
+            client.setReference(serverUrl + "/delete?msgID=" + msgID);
             Representation response = client.delete();
 
             if (response != null) {
@@ -147,7 +150,7 @@ public class RESTMessenger implements Messenger {
         String user = username.toString();
         String topicStr = topic.toString();
         try {
-            ClientResource client = new ClientResource(serverUrl + "/subscribe");
+            client.setReference(serverUrl + "/subscribe");
 
             ObjectNode jsonNode = mapper.createObjectNode();
             jsonNode.put("user", user);
@@ -189,7 +192,7 @@ public class RESTMessenger implements Messenger {
     @Override
     public Topic[] listTopics() {
         try {
-            ClientResource client = new ClientResource(serverUrl + "/list-topics");
+            client.setReference(serverUrl + "/list-topics");
             Representation response = client.get();
             if (response != null) {
                 String text = response.getText();
@@ -217,7 +220,7 @@ public class RESTMessenger implements Messenger {
             return new Topic[0];
         try {
             String user = username.toString();
-            ClientResource client = new ClientResource(serverUrl + "/list-topics?user=" + user);
+            client.setReference(serverUrl + "/list-topics?user=" + user);
             Representation response = client.get();
             if (response != null) {
                 String text = response.getText();
@@ -252,7 +255,7 @@ public class RESTMessenger implements Messenger {
         try {
             String user = username.toString();
 
-            ClientResource client = new ClientResource(serverUrl + "/list-messages?user=" + user);
+            client.setReference(serverUrl + "/list-messages?user=" + user);
             Representation response = client.get();
 
             if (response != null) {
