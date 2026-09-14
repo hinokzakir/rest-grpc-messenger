@@ -120,7 +120,7 @@ public class RESTResource extends ServerResource {
     }
 
     @Post("json")
-    public String store(JsonNode json) {
+    public String handlePost(JsonNode json) {
         String path = getReference().getPath();
         if (path.contains("/store")) {
             try {
@@ -141,6 +141,30 @@ public class RESTResource extends ServerResource {
                         + msg.getUsername();
             } catch (Exception E) {
                 return "Error: Could not store message: " + E.toString();
+            }
+        } else if (path.contains("/subscribe")) {
+            try {
+                String username = (json != null && json.has("user")) ? json.get("user").asText() : null;
+                String topicStr = (json != null && json.has("topic")) ? json.get("topic").asText() : null;
+
+                if (username == null || topicStr == null) {
+                    return "Error: Missing username or topic";
+                }
+
+                Username user = new Username(username);
+                Topic topic = new Topic(topicStr);
+
+                Topic[] topics = messengerBackend.subscribe(user, topic);
+                ObjectMapper mapper = new ObjectMapper();
+                ArrayNode arrayNode = mapper.createArrayNode();
+                if (topics != null) {
+                    for (Topic t : topics) {
+                        arrayNode.add(t.toString());
+                    }
+                }
+                return arrayNode.toString();
+            } catch (Exception e) {
+                return "Error: Could not subscribe user to topic: " + e.toString();
             }
         }
         return "Not Found";
