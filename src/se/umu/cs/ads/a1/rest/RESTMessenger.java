@@ -6,6 +6,8 @@ import se.umu.cs.ads.a1.types.Data;
 
 import org.restlet.representation.Representation;
 import org.restlet.resource.ClientResource;
+import org.restlet.security.User;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -213,7 +215,27 @@ public class RESTMessenger implements Messenger {
     // query interface
     @Override
     public Username[] listUsers() {
-        throw new UnsupportedOperationException("Unimplemented method 'listUsers'");
+        try {
+            client.setReference(serverUrl + "/list-users");
+            Representation response = client.get();
+            if (response != null) {
+                String text = response.getText();
+                JsonNode jsonArray = mapper.readTree(text);
+                client.release();
+
+                if (jsonArray != null && jsonArray.isArray()) {
+                    Username[] users = new Username[jsonArray.size()];
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        users[i] = new Username(jsonArray.get(i).asText());
+                    }
+                    return users;
+                }
+
+            }
+        } catch (Exception e) {
+            System.err.println("Error calling /list-users endpoint: " + e.getMessage());
+        }
+        return new Username[0];
     }
 
     @Override
