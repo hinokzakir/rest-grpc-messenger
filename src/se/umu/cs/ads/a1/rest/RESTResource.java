@@ -59,9 +59,20 @@ public class RESTResource extends ServerResource {
         } else if (path.contains("/list-messages")) {
             try {
                 Form form = getReference().getQueryAsForm();
-                String username = form.getFirstValue("user");
-                    Username user = new Username(username);
-                MessageId[] messages = messengerBackend.listMessages(user);
+                MessageId[] messages = null;
+
+                String userParam = (form != null) ? form.getFirstValue("user") : null;
+                String topicParam = (form != null) ? form.getFirstValue("topic") : null;
+
+                if (userParam != null && !userParam.isEmpty()) {
+                    Username user = new Username(userParam);
+                    messages = messengerBackend.listMessages(user);
+                } else if (topicParam != null && !topicParam.isEmpty()) {
+                    Topic topic = new Topic(topicParam);
+                    messages = messengerBackend.listMessages(topic);
+                } else {
+                    return "Error: Missing user or topic parameter";
+                }
 
                 ObjectMapper mapper = new ObjectMapper();
                 ArrayNode arrayNode = mapper.createArrayNode();
@@ -72,9 +83,7 @@ public class RESTResource extends ServerResource {
                 }
                 return arrayNode.toString();
             } catch (Exception e) {
-                Form form = getReference().getQueryAsForm();
-                String username = form.getFirstValue("user");
-                return "Error: Invalid username: " + username;
+                return "Error: Could not list messages: " + e.getMessage();
             }
 
         } else if (path.contains("/list-users")) {
@@ -207,8 +216,7 @@ public class RESTResource extends ServerResource {
                     }
                 }
                 return arrayNode.toString();
-                
-                
+
             } catch (Exception e) {
                 // TODO: handle exception
             }

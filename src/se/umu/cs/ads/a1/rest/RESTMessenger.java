@@ -354,6 +354,33 @@ public class RESTMessenger implements Messenger {
 
     @Override
     public MessageId[] listMessages(Topic topic) {
-        throw new UnsupportedOperationException("Unimplemented method 'listMessages'");
+         if (topic == null)
+            return new MessageId[0];
+
+        try {
+            String topicStr = topic.toString();
+
+            client.setReference(serverUrl + "/list-messages?topic=" + topicStr);
+            Representation response = client.get();
+
+            if (response != null) {
+                String text = response.getText();
+                JsonNode jsonArray = mapper.readTree(text);
+                client.release();
+
+                if (jsonArray != null && jsonArray.isArray()) {
+                    MessageId[] result = new MessageId[jsonArray.size()];
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        result[i] = new MessageId(jsonArray.get(i).asText());
+                    }
+                    return result;
+                }
+            }
+            client.release();
+        } catch (Exception e) {
+            System.err.println("Error calling /list-messages endpoint: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return new MessageId[0];
     }
 }
