@@ -67,6 +67,7 @@ public class RESTServer {
             router.attach("/list-topics", RESTResource.class); // list all topics
             router.attach("/delete", RESTResource.class); // delete message
             router.attach("/subscribe", RESTResource.class); // subscribe user to topic
+            router.attach("/unsubscribe", RESTResource.class); // unsubscribe user
             return router;
         }
     }

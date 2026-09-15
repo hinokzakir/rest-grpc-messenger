@@ -179,7 +179,34 @@ public class RESTMessenger implements Messenger {
 
     @Override
     public Topic[] unsubscribe(Username username, Topic topic) {
-        throw new UnsupportedOperationException("Unimplemented method 'unsubscribe'");
+        String user = username.toString();
+        String topicStr = topic.toString();
+        try {
+            client.setReference(serverUrl + "/unsubscribe");
+
+            ObjectNode jsonNode = mapper.createObjectNode();
+            jsonNode.put("user", user);
+            jsonNode.put("topic", topicStr);
+            Representation response = client.post(jsonNode);
+
+            if (response != null) {
+                System.out.println("Subscribe Server Response: " + response.getText());
+            }
+
+            // create a topic array of response
+            JsonNode jsonArray = mapper.readTree(response.getText());
+            Topic[] topics = new Topic[jsonArray.size()];
+            for (int i = 0; i < jsonArray.size(); i++) {
+                topics[i] = new Topic(jsonArray.get(i).asText());
+            }
+            client.release();
+            return topics;
+        } catch (Exception e) {
+            System.err.println("Error calling /subscribe endpoint: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return new Topic[0];
     }
 
     // ----------------------------------------------------------

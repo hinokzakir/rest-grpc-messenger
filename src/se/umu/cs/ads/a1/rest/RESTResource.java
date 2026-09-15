@@ -166,6 +166,32 @@ public class RESTResource extends ServerResource {
             } catch (Exception e) {
                 return "Error: Could not subscribe user to topic: " + e.toString();
             }
+        } else if (path.contains("/unsubscribe")) {
+            try {
+                String username = (json != null && json.has("user")) ? json.get("user").asText() : null;
+                String topicStr = (json != null && json.has("topic")) ? json.get("topic").asText() : null;
+
+                if (username == null || topicStr == null) {
+                    return "Error: Missing username or topic";
+                }
+
+                Username user = new Username(username);
+                Topic topic = new Topic(topicStr);
+
+                Topic[] topics = messengerBackend.unsubscribe(user, topic);
+                ObjectMapper mapper = new ObjectMapper();
+                ArrayNode arrayNode = mapper.createArrayNode();
+                if (topics != null) {
+                    for (Topic t : topics) {
+                        arrayNode.add(t.toString());
+                    }
+                }
+                return arrayNode.toString();
+                
+                
+            } catch (Exception e) {
+                // TODO: handle exception
+            }
         }
         return "Not Found";
     }
