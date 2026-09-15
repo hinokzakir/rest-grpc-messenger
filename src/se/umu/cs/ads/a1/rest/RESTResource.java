@@ -114,7 +114,27 @@ public class RESTResource extends ServerResource {
                 return "Error: Could not list topics: " + e.getMessage();
             }
 
-        } else {
+        } else if (path.contains("/list-subscribers")) {
+            try {
+                Form form = getReference().getQueryAsForm();
+                String topicString = (form != null) ? form.getFirstValue("topic") : null;
+                Topic topic = new Topic(topicString);
+
+                Username[] users;
+                users = messengerBackend.listSubscribers(topic);
+
+                ObjectMapper mapper = new ObjectMapper();
+                ArrayNode arrayNode = mapper.createArrayNode();
+                if (users != null) {
+                    for (Username user : users) {
+                        arrayNode.add(user.toString());
+                    }
+                }
+                return arrayNode.toString();
+            } catch (Exception e) {
+                return "Error: Could not list topics: " + e.getMessage();
+            }
+        }else {
             return "Not Found";
         }
     }

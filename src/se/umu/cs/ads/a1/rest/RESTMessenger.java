@@ -271,7 +271,31 @@ public class RESTMessenger implements Messenger {
 
     @Override
     public Username[] listSubscribers(Topic topic) {
-        throw new UnsupportedOperationException("Unimplemented method 'listSubscribers'");
+        if (topic == null)
+            return new Username[0];
+        try {
+            String topicStr = topic.toString();
+            client.setReference(serverUrl + "/list-subscribers?topic=" + topicStr);
+            Representation response = client.get();
+
+            if (response != null) {
+                String text = response.getText();
+                JsonNode jsonArray = mapper.readTree(text);
+                client.release();
+                if (jsonArray != null && jsonArray.isArray()) {
+                    Username[] users = new Username[jsonArray.size()];
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        users[i] = new Username(jsonArray.get(i).asText());
+                    }
+                    return users;
+                }
+
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error calling /list-subscribers endpoint: " + e.getMessage());
+        }
+        return new Username[0];
     }
 
     @Override

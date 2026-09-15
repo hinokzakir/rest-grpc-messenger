@@ -65,6 +65,7 @@ public class RESTServer {
             router.attach("/list-messages", RESTResource.class); // list messages for a user
             router.attach("/list-users", RESTResource.class); // list all users
             router.attach("/list-topics", RESTResource.class); // list all topics
+            router.attach("/list-subscribers", RESTResource.class); // list all subscribers to topic
             router.attach("/delete", RESTResource.class); // delete message
             router.attach("/subscribe", RESTResource.class); // subscribe user to topic
             router.attach("/unsubscribe", RESTResource.class); // unsubscribe user
