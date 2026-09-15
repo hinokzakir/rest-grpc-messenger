@@ -40,6 +40,23 @@
             <artifactId>org.restlet.ext.jackson</artifactId>
             <version>${restlet.version}</version>
         </dependency>
+
+        <!-- gRPC Framework -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+            <version>1.62.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-protobuf</artifactId>
+            <version>1.62.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
+            <version>1.62.2</version>
+        </dependency>
     </dependencies>
 
     <build>
