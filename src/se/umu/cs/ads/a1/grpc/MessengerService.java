@@ -31,6 +31,21 @@ public class MessengerService extends MessengerServiceGrpc.MessengerServiceImplB
     }
 
     @Override
+    public void listMessagesTopic(TopicRequest request, StreamObserver<ListMessagesResponse> responseObserver) {
+        // first create a Username object out of the request
+        Topic topic = new Topic(request.getTopic());
+        MessageId[] messages = backend.listMessages(topic);
+
+        // create response out of messages and return to client
+        ListMessagesResponse.Builder builder = ListMessagesResponse.newBuilder();
+        for (MessageId message : messages) {
+            builder.addMessageID(message.toString());
+        }
+        responseObserver.onNext(builder.build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void store(StoreRequest request, StreamObserver<StoreResponse> responseObserver) {
         Message message = new Message(
                 new MessageId(request.getMessage().getMessageID()),
@@ -120,6 +135,49 @@ public class MessengerService extends MessengerServiceGrpc.MessengerServiceImplB
         ListUsersResponse.Builder builder = ListUsersResponse.newBuilder();
 
         for(Username user : users){
+            builder.addUser(user.toString());
+        }
+        responseObserver.onNext(builder.build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listTopics(Empty request, StreamObserver<ListTopicsResponse> responseObserver) {
+        Topic[] topics = backend.listTopics();
+
+        ListTopicsResponse.Builder builder = ListTopicsResponse.newBuilder();
+
+        for(Topic topic : topics){
+            builder.addTopic(topic.toString());
+        }
+        responseObserver.onNext(builder.build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void listTopicsUser(UserRequest request, StreamObserver<ListTopicsResponse> responseObserver) {
+        Username user =  new Username(request.getUsername().toString());
+
+        Topic[] topics = backend.listTopics(user);
+
+        ListTopicsResponse.Builder builder = ListTopicsResponse.newBuilder();
+
+        for(Topic topic : topics){
+            builder.addTopic(topic.toString());
+        }
+        responseObserver.onNext(builder.build());
+        responseObserver.onCompleted();
+        
+    }
+
+    @Override 
+    public void listSubscribers(TopicRequest request, StreamObserver<ListUsersResponse> responseObserver) {
+        Topic topic = new Topic(request.getTopic().toString());
+        Username[] subscribers = backend.listSubscribers(topic);
+
+        ListUsersResponse.Builder builder = ListUsersResponse.newBuilder();
+
+        for(Username user : subscribers){
             builder.addUser(user.toString());
         }
         responseObserver.onNext(builder.build());

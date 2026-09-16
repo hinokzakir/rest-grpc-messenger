@@ -13,6 +13,8 @@ import se.umu.cs.ads.a1.types.Username;
 
 import java.util.List;
 
+import org.restlet.security.User;
+
 import com.google.protobuf.ByteString;
 
 public class GRPCMessenger implements Messenger {
@@ -109,7 +111,7 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public void delete(MessageId[] messages) {
-        for(MessageId message : messages) {
+        for (MessageId message : messages) {
             delete(message);
         }
     }
@@ -118,9 +120,9 @@ public class GRPCMessenger implements Messenger {
     public Topic[] subscribe(Username username, Topic topic) {
         try {
             SubscribeRequest request = SubscribeRequest.newBuilder()
-            .setUsername(username.toString())
-            .setTopic(topic.toString())
-            .build();
+                    .setUsername(username.toString())
+                    .setTopic(topic.toString())
+                    .build();
 
             SubscribeResponse response = blockingStub.subscribe(request);
             List<String> topicList = response.getTopicList();
@@ -130,21 +132,21 @@ public class GRPCMessenger implements Messenger {
                 topics[i] = new Topic(topicList.get(i));
             }
             return topics;
-            
+
         } catch (Exception e) {
             System.out.println("Subscribe Error: " + e.getStackTrace());
         }
         return null;
-        
+
     }
 
     @Override
     public Topic[] unsubscribe(Username username, Topic topic) {
-         try {
+        try {
             SubscribeRequest request = SubscribeRequest.newBuilder()
-            .setUsername(username.toString())
-            .setTopic(topic.toString())
-            .build();
+                    .setUsername(username.toString())
+                    .setTopic(topic.toString())
+                    .build();
 
             SubscribeResponse response = blockingStub.unsubscribe(request);
             List<String> topicList = response.getTopicList();
@@ -154,7 +156,7 @@ public class GRPCMessenger implements Messenger {
                 topics[i] = new Topic(topicList.get(i));
             }
             return topics;
-            
+
         } catch (Exception e) {
             System.out.println("Unsubscribe Error: " + e.getStackTrace());
         }
@@ -183,20 +185,57 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public Topic[] listTopics() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listTopics'");
+        try {
+            ListTopicsResponse response = blockingStub.listTopics(null);
+            List<String> topicList = response.getTopicList();
+            Topic[] topics = new Topic[topicList.size()];
+
+            for (int i = 0; i < topicList.size(); i++) {
+                topics[i] = new Topic(topicList.get(i));
+            }
+            return topics;
+
+        } catch (Exception e) {
+            System.out.println("Error listing topics: " + e.getStackTrace());
+        }
+        return new Topic[0];
     }
 
     @Override
     public Topic[] listTopics(Username username) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listTopics'");
+        try {
+            UserRequest request = UserRequest.newBuilder().setUsername(username.toString()).build();
+            ListTopicsResponse response = blockingStub.listTopicsUser(request);
+            List<String> topicList = response.getTopicList();
+            Topic[] topics = new Topic[topicList.size()];
+
+            for (int i = 0; i < topicList.size(); i++) {
+                topics[i] = new Topic(topicList.get(i));
+            }
+            return topics;
+
+        } catch (Exception e) {
+            System.out.println("Error listing topics(user): " + e.getStackTrace());
+        }
+        return new Topic[0];
     }
 
     @Override
     public Username[] listSubscribers(Topic topic) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listSubscribers'");
+        try {
+            TopicRequest request = TopicRequest.newBuilder().setTopic(topic.toString()).build();
+            ListUsersResponse response = blockingStub.listSubscribers(request);
+            List<String> userList = response.getUserList();
+            Username[] users = new Username[userList.size()];
+
+            for (int i = 0; i < userList.size(); i++) {
+                users[i] = new Username(userList.get(i));
+            }
+            return users;
+        } catch (Exception e) {
+            System.out.println("Error lisitng subs: " + e.getStackTrace());
+        }
+        return new Username[0];
     }
 
     @Override
@@ -224,8 +263,25 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public MessageId[] listMessages(Topic topic) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listMessages'");
+        try {
+            String topicStr = topic.toString();
+            TopicRequest request = TopicRequest.newBuilder().setTopic(topicStr).build();
+
+            ListMessagesResponse response = blockingStub.listMessagesTopic(request);
+
+            List<String> messageList = response.getMessageIDList();
+            MessageId[] messages = new MessageId[messageList.size()];
+            for (int i = 0; i < messageList.size(); i++) {
+                messages[i] = new MessageId(messageList.get(i));
+            }
+            System.out.println("List message completed");
+            return messages;
+
+        } catch (Exception e) {
+            System.out.println("FAHH: " + e.getStackTrace());
+        }
+
+        return new MessageId[0];
     }
 
 }

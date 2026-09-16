@@ -9,12 +9,16 @@ option java_multiple_files = true;
 
 service MessengerService {
     rpc ListMessages (ListMessagesRequest) returns (ListMessagesResponse);
+    rpc ListMessagesTopic (TopicRequest) returns (ListMessagesResponse);
     rpc Store (StoreRequest) returns (StoreResponse);
     rpc Delete (DeleteRequest) returns (DeleteResponse);
     rpc Retrieve (RetrieveRequest) returns (RetrieveResponse);
     rpc Subscribe (SubscribeRequest) returns (SubscribeResponse);
     rpc Unsubscribe (SubscribeRequest) returns (SubscribeResponse);
     rpc ListUsers (Empty) returns (ListUsersResponse);
+    rpc ListTopics (Empty) returns (ListTopicsResponse);
+    rpc ListTopicsUser (UserRequest) returns (ListTopicsResponse);
+    rpc ListSubscribers (TopicRequest) returns (ListUsersResponse);
 }
 
 // new structs
@@ -52,6 +56,14 @@ message ListMessagesRequest {
     string username = 1;
 }
 
+message UserRequest {
+    string username = 1;
+}
+
+message TopicRequest {
+    string topic = 1;
+}
+
 
 // Response message
 message ListMessagesResponse {
@@ -77,4 +89,8 @@ message SubscribeResponse {
 
 message ListUsersResponse {
     repeated string user = 1;
+}
+
+message ListTopicsResponse {
+    repeated string topic = 1;
 }
