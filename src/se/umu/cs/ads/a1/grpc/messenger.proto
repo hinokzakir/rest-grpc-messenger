@@ -9,9 +9,26 @@ option java_multiple_files = true;
 
 service MessengerService {
     rpc ListMessages (ListMessagesRequest) returns (ListMessagesResponse);
+    rpc Store (StoreRequest) returns (StoreResponse);
+}
+
+// new structs
+
+message Msg {
+    string messageID = 1;
+    int64 timestamp = 2;
+    string username = 3;
+    string topic = 4;
+    string content = 5;
+    bytes data = 6;
 }
 
 // Request messages
+
+message StoreRequest {
+    Msg message = 1;
+}
+
 message ListMessagesRequest {
     string username = 1;
 }
@@ -20,4 +37,8 @@ message ListMessagesRequest {
 // Response message
 message ListMessagesResponse {
     repeated string messageID = 1;
+}
+
+message StoreResponse {
+    string response = 1;
 }

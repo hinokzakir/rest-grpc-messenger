@@ -10,6 +10,8 @@ import se.umu.cs.ads.a1.types.Username;
 
 import java.util.List;
 
+import com.google.protobuf.ByteString;
+
 public class GRPCMessenger implements Messenger {
     private final ManagedChannel channel;
     private final MessengerServiceGrpc.MessengerServiceBlockingStub blockingStub;
@@ -27,8 +29,26 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public void store(Message message) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'store'");
+        try {
+            //build msg stub
+            Msg msg = Msg.newBuilder()
+                .setMessageID(message.getId().toString())
+                .setTimestamp(message.getTimestamp().getValue())
+                .setUsername(message.getUsername().toString())
+                .setTopic(message.getTopic().toString())
+                .setContent(message.getContent().toString())
+                .setData(ByteString.copyFrom(message.getData().getValue()))
+                .build();
+
+            StoreRequest request = StoreRequest.newBuilder().setMessage(msg).build();
+            StoreResponse response = blockingStub.store(request);
+
+            String responseStr = response.getResponse();
+            System.out.println(responseStr);
+
+        } catch (Exception e) {
+            System.out.println("FAHH: " + e.getStackTrace());
+        }
     }
 
     @Override

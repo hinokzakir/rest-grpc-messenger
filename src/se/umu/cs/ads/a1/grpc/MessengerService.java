@@ -28,4 +28,22 @@ public class MessengerService extends MessengerServiceGrpc.MessengerServiceImplB
         responseObserver.onCompleted();
 
     }
+
+    @Override
+    public void store(StoreRequest request, StreamObserver<StoreResponse> responseObserver) {
+        Message message = new Message(
+                new MessageId(request.getMessage().getMessageID()),
+                new Timestamp(request.getMessage().getTimestamp()),
+                new Username(request.getMessage().getUsername()),
+                new Topic(request.getMessage().getTopic()),
+                new Content(request.getMessage().getContent()),
+                new Data(request.getMessage().getData().toByteArray()));
+
+        backend.store(message);
+        StoreResponse response = StoreResponse.newBuilder()
+                .setResponse("OK")
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
 }
