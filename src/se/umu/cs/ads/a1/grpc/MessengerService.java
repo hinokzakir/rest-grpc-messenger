@@ -112,4 +112,17 @@ public class MessengerService extends MessengerServiceGrpc.MessengerServiceImplB
         responseObserver.onNext(builder.build());
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void listUsers(Empty request, StreamObserver<ListUsersResponse> responseObserver) {
+        Username[] users = backend.listUsers();
+
+        ListUsersResponse.Builder builder = ListUsersResponse.newBuilder();
+
+        for(Username user : users){
+            builder.addUser(user.toString());
+        }
+        responseObserver.onNext(builder.build());
+        responseObserver.onCompleted();
+    }
 }

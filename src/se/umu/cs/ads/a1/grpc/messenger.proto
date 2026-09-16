@@ -14,6 +14,7 @@ service MessengerService {
     rpc Retrieve (RetrieveRequest) returns (RetrieveResponse);
     rpc Subscribe (SubscribeRequest) returns (SubscribeResponse);
     rpc Unsubscribe (SubscribeRequest) returns (SubscribeResponse);
+    rpc ListUsers (Empty) returns (ListUsersResponse);
 }
 
 // new structs
@@ -26,6 +27,8 @@ message Msg {
     string content = 5;
     bytes data = 6;
 }
+
+message Empty {}
 
 // Request messages
 
@@ -70,4 +73,8 @@ message RetrieveResponse{
 
 message SubscribeResponse {
     repeated string topic = 1;
+}
+
+message ListUsersResponse {
+    repeated string user = 1;
 }

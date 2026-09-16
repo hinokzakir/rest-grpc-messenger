@@ -163,8 +163,22 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public Username[] listUsers() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listUsers'");
+        try {
+            Empty empty = null;
+            ListUsersResponse response = blockingStub.listUsers(empty);
+            List<String> userList = response.getUserList();
+
+            Username[] users = new Username[userList.size()];
+            for (int i = 0; i < userList.size(); i++) {
+                users[i] = new Username(userList.get(i));
+            }
+            return users;
+
+        } catch (Exception e) {
+            System.out.println("Error listing users: " + e.getStackTrace());
+        }
+        return new Username[0];
+
     }
 
     @Override
