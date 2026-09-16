@@ -30,15 +30,15 @@ public class GRPCMessenger implements Messenger {
     @Override
     public void store(Message message) {
         try {
-            //build msg stub
+            // build msg stub
             Msg msg = Msg.newBuilder()
-                .setMessageID(message.getId().toString())
-                .setTimestamp(message.getTimestamp().getValue())
-                .setUsername(message.getUsername().toString())
-                .setTopic(message.getTopic().toString())
-                .setContent(message.getContent().toString())
-                .setData(ByteString.copyFrom(message.getData().getValue()))
-                .build();
+                    .setMessageID(message.getId().toString())
+                    .setTimestamp(message.getTimestamp().getValue())
+                    .setUsername(message.getUsername().toString())
+                    .setTopic(message.getTopic().toString())
+                    .setContent(message.getContent().toString())
+                    .setData(ByteString.copyFrom(message.getData().getValue()))
+                    .build();
 
             StoreRequest request = StoreRequest.newBuilder().setMessage(msg).build();
             StoreResponse response = blockingStub.store(request);
@@ -71,8 +71,15 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public void delete(MessageId message) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'delete'");
+        try {
+            DeleteRequest request = DeleteRequest.newBuilder().setMessageId(message.toString()).build();
+            DeleteResponse response = blockingStub.delete(request);
+            String status = response.getResponse();
+            System.out.println(status);
+        } catch (Exception e) {
+            System.out.println("FAAAHHH: " + e.getStackTrace());
+        }
+
     }
 
     @Override
