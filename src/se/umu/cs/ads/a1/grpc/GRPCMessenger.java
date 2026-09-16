@@ -56,8 +56,9 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public void store(Message[] messages) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'store'");
+        for (Message message : messages) {
+            store(message);
+        }
     }
 
     @Override
@@ -86,8 +87,11 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public Message[] retrieve(MessageId[] message) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'retrieve'");
+        Message[] returnedMessages = new Message[message.length];
+        for (int i = 0; i < message.length; i++) {
+            returnedMessages[i] = retrieve(message[i]);
+        }
+        return returnedMessages;
     }
 
     @Override
@@ -105,8 +109,9 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public void delete(MessageId[] messages) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'delete'");
+        for(MessageId message : messages) {
+            delete(message);
+        }
     }
 
     @Override
