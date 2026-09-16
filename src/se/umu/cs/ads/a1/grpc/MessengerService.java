@@ -82,4 +82,34 @@ public class MessengerService extends MessengerServiceGrpc.MessengerServiceImplB
         responseObserver.onNext(response);
         responseObserver.onCompleted();
     }
+
+    @Override
+    public void subscribe(SubscribeRequest request, StreamObserver<SubscribeResponse> responseObserver) {
+        Username user = new Username(request.getUsername().toString());
+        Topic topic = new Topic(request.getTopic().toString());
+
+        Topic[] topics = backend.subscribe(user, topic);
+
+        SubscribeResponse.Builder builder = SubscribeResponse.newBuilder();
+        for(Topic t : topics){
+            builder.addTopic(t.toString());
+        }
+        responseObserver.onNext(builder.build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void unsubscribe(SubscribeRequest request, StreamObserver<SubscribeResponse> responseObserver) {
+        Username user = new Username(request.getUsername().toString());
+        Topic topic = new Topic(request.getTopic().toString());
+
+        Topic[] topics = backend.unsubscribe(user, topic);
+
+        SubscribeResponse.Builder builder = SubscribeResponse.newBuilder();
+        for(Topic t : topics){
+            builder.addTopic(t.toString());
+        }
+        responseObserver.onNext(builder.build());
+        responseObserver.onCompleted();
+    }
 }

@@ -12,6 +12,8 @@ service MessengerService {
     rpc Store (StoreRequest) returns (StoreResponse);
     rpc Delete (DeleteRequest) returns (DeleteResponse);
     rpc Retrieve (RetrieveRequest) returns (RetrieveResponse);
+    rpc Subscribe (SubscribeRequest) returns (SubscribeResponse);
+    rpc Unsubscribe (SubscribeRequest) returns (SubscribeResponse);
 }
 
 // new structs
@@ -39,6 +41,10 @@ message RetrieveRequest{
     string messageId = 1;
 }
 
+message SubscribeRequest {
+    string username = 1;
+    string topic = 2;
+}
 message ListMessagesRequest {
     string username = 1;
 }
@@ -48,6 +54,7 @@ message ListMessagesRequest {
 message ListMessagesResponse {
     repeated string messageID = 1;
 }
+
 
 message StoreResponse {
     string response = 1;
@@ -59,4 +66,8 @@ message DeleteResponse {
 
 message RetrieveResponse{
     Msg message = 1;
+}
+
+message SubscribeResponse {
+    repeated string topic = 1;
 }

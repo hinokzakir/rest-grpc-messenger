@@ -116,14 +116,49 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public Topic[] subscribe(Username username, Topic topic) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'subscribe'");
+        try {
+            SubscribeRequest request = SubscribeRequest.newBuilder()
+            .setUsername(username.toString())
+            .setTopic(topic.toString())
+            .build();
+
+            SubscribeResponse response = blockingStub.subscribe(request);
+            List<String> topicList = response.getTopicList();
+
+            Topic[] topics = new Topic[topicList.size()];
+            for (int i = 0; i < topicList.size(); i++) {
+                topics[i] = new Topic(topicList.get(i));
+            }
+            return topics;
+            
+        } catch (Exception e) {
+            System.out.println("Subscribe Error: " + e.getStackTrace());
+        }
+        return null;
+        
     }
 
     @Override
     public Topic[] unsubscribe(Username username, Topic topic) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'unsubscribe'");
+         try {
+            SubscribeRequest request = SubscribeRequest.newBuilder()
+            .setUsername(username.toString())
+            .setTopic(topic.toString())
+            .build();
+
+            SubscribeResponse response = blockingStub.unsubscribe(request);
+            List<String> topicList = response.getTopicList();
+
+            Topic[] topics = new Topic[topicList.size()];
+            for (int i = 0; i < topicList.size(); i++) {
+                topics[i] = new Topic(topicList.get(i));
+            }
+            return topics;
+            
+        } catch (Exception e) {
+            System.out.println("Unsubscribe Error: " + e.getStackTrace());
+        }
+        return null;
     }
 
     @Override
