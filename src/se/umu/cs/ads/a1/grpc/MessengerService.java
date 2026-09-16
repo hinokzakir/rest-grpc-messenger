@@ -1,6 +1,7 @@
 package se.umu.cs.ads.a1.grpc;
 
 import com.google.longrunning.DeleteOperationRequest;
+import com.google.protobuf.ByteString;
 import com.google.rpc.context.AttributeContext.ResponseOrBuilder;
 
 import io.grpc.stub.StreamObserver;
@@ -54,6 +55,29 @@ public class MessengerService extends MessengerServiceGrpc.MessengerServiceImplB
         backend.delete(id);
         DeleteResponse response = DeleteResponse.newBuilder()
                 .setResponse("Successfully Deleted Message: " + id.toString())
+                .build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void retrieve(RetrieveRequest request, StreamObserver<RetrieveResponse> responseObserver) {
+
+        MessageId id = new MessageId(request.getMessageId().toString());
+        Message message = backend.retrieve(id);
+
+        Msg msg = Msg.newBuilder()
+            .setMessageID(message.getId().toString())
+            .setTimestamp(message.getTimestamp().getValue())
+            .setUsername(message.getUsername().toString())
+            .setTopic(message.getTopic().toString())
+            .setContent(message.getContent().toString())
+            .setData(ByteString.copyFrom(message.getData().getValue()))
+            .build();
+        
+        backend.store(message);
+        RetrieveResponse response = RetrieveResponse.newBuilder()
+                .setMessage(msg)
                 .build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();

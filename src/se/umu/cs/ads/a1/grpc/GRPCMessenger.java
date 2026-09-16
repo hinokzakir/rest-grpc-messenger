@@ -3,8 +3,11 @@ package se.umu.cs.ads.a1.grpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import se.umu.cs.ads.a1.interfaces.Messenger;
+import se.umu.cs.ads.a1.types.Content;
+import se.umu.cs.ads.a1.types.Data;
 import se.umu.cs.ads.a1.types.Message;
 import se.umu.cs.ads.a1.types.MessageId;
+import se.umu.cs.ads.a1.types.Timestamp;
 import se.umu.cs.ads.a1.types.Topic;
 import se.umu.cs.ads.a1.types.Username;
 
@@ -59,8 +62,26 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public Message retrieve(MessageId message) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'retrieve'");
+        try {
+            RetrieveRequest request = RetrieveRequest.newBuilder().setMessageId(message.toString()).build();
+            RetrieveResponse response = blockingStub.retrieve(request);
+
+            Msg protoMsg = response.getMessage();
+
+            Message msg = new Message(
+                    new MessageId(protoMsg.getMessageID()),
+                    new Timestamp(protoMsg.getTimestamp()),
+                    new Username(protoMsg.getUsername()),
+                    new Topic(protoMsg.getTopic()),
+                    new Content(protoMsg.getContent()),
+                    new Data(protoMsg.getData().toByteArray()));
+
+            return msg;
+
+        } catch (Exception e) {
+            System.out.println("FAHH: " + e.getStackTrace());
+        }
+        return null;
     }
 
     @Override

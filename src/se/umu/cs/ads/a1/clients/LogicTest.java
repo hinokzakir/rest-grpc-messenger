@@ -6,26 +6,25 @@ import se.umu.cs.ads.a1.types.Topic;
 import se.umu.cs.ads.a1.types.Username;
 import se.umu.cs.ads.a1.util.Util;
 
-public class LogicTest
-{
+public class LogicTest {
   private final Messenger messenger;
 
-
-  //----------------------------------------------------------
-  private LogicTest (Messenger messenger)
-  {
+  // ----------------------------------------------------------
+  private LogicTest(Messenger messenger) {
     this.messenger = messenger;
   }
 
-  //----------------------------------------------------------
+  // ----------------------------------------------------------
   // example logic test
-	public void testStoreAndDelete (Message message)
-	{
-	  Username username = message.getUsername();
+  public void testStoreAndDelete(Message message) {
+    Username username = message.getUsername();
 
-	  int nrMessagesBeforeStore = messenger.listMessages(username).length;
-	  messenger.store(message);
+    int nrMessagesBeforeStore = messenger.listMessages(username).length;
+    messenger.store(message);
     int nrMessagesAfterStore = messenger.listMessages(username).length;
+    System.out.println("Try to retrieve message: " + message.getId().toString());
+    Message testRetrieveMessage = messenger.retrieve(message.getId());
+    System.out.println("Message retrieved: " + testRetrieveMessage.getId().getValue());
     if (nrMessagesAfterStore != (nrMessagesBeforeStore + 1))
       throw new IllegalStateException("testStoreAndDelete(): store failure");
 
@@ -34,11 +33,10 @@ public class LogicTest
     int nrMessagesAfterDelete = messenger.listMessages(username).length;
     if (nrMessagesAfterDelete != (nrMessagesBeforeDelete - 1))
       throw new IllegalStateException("testStoreAndDelete(): delete failure");
-	}
+  }
 
-  //----------------------------------------------------------
-  public void testTopicWildcards ()
-  {
+  // ----------------------------------------------------------
+  public void testTopicWildcards() {
     Topic data = new Topic("/abc/a");
     Topic pattern = new Topic("/abc*");
 
@@ -51,23 +49,22 @@ public class LogicTest
     System.out.println("  wildcard: " + pattern.getWildcard());
     System.out.println("  value:    " + pattern.getValue());
 
-    System.out.println("match(" + pattern + "," + data + ") = " + Topic.match(pattern,data));
-    System.out.println("match(" + data + "," + pattern + ") = " + Topic.match(data,pattern));
+    System.out.println("match(" + pattern + "," + data + ") = " + Topic.match(pattern, data));
+    System.out.println("match(" + data + "," + pattern + ") = " + Topic.match(data, pattern));
     System.out.println("test done");
     System.out.println();
   }
 
-
-  //----------------------------------------------------------
-  //----------------------------------------------------------
-  public static void test (Messenger messenger)
-  {
+  // ----------------------------------------------------------
+  // ----------------------------------------------------------
+  public static void test(Messenger messenger) {
     LogicTest test = new LogicTest(messenger);
 
     test.testTopicWildcards();
 
     System.out.println("testing logic (example)...");
-    test.testStoreAndDelete(Util.constructRandomMessage(Util.constructRandomUsername(),Util.constructRandomTopic(),1024));
+    test.testStoreAndDelete(
+        Util.constructRandomMessage(Util.constructRandomUsername(), Util.constructRandomTopic(), 1024));
     System.out.println("test done");
   }
 }
