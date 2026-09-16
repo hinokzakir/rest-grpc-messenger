@@ -4,3 +4,20 @@ package messenger;
 
 option java_package = "se.umu.cs.ads.a1.grpc";
 option java_multiple_files = true;
+
+// RPC services
+
+service MessengerService {
+    rpc ListMessages (ListMessagesRequest) returns (ListMessagesResponse);
+}
+
+// Request messages
+message ListMessagesRequest {
+    string username = 1;
+}
+
+
+// Response message
+message ListMessagesResponse {
+    repeated string messageID = 1;
+}

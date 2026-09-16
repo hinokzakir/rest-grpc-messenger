@@ -1,12 +1,29 @@
 package se.umu.cs.ads.a1.grpc;
 
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import se.umu.cs.ads.a1.interfaces.Messenger;
 import se.umu.cs.ads.a1.types.Message;
 import se.umu.cs.ads.a1.types.MessageId;
 import se.umu.cs.ads.a1.types.Topic;
 import se.umu.cs.ads.a1.types.Username;
 
+import java.util.List;
+
 public class GRPCMessenger implements Messenger {
+    private final ManagedChannel channel;
+    private final MessengerServiceGrpc.MessengerServiceBlockingStub blockingStub;
+
+    public GRPCMessenger() {
+        this("localhost", 8080);
+    }
+
+    public GRPCMessenger(String host, int port) {
+        // set up connection to server
+        this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+        // client side stub
+        this.blockingStub = MessengerServiceGrpc.newBlockingStub(channel);
+    }
 
     @Override
     public void store(Message message) {
@@ -82,8 +99,25 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public MessageId[] listMessages(Username username) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listMessages'");
+        try {
+            String user = username.toString();
+            ListMessagesRequest request = ListMessagesRequest.newBuilder().setUsername(user).build();
+
+            ListMessagesResponse response = blockingStub.listMessages(request);
+
+            List<String> messageList = response.getMessageIDList();
+            MessageId[] messages = new MessageId[messageList.size()];
+            for (int i = 0; i < messageList.size(); i++) {
+                messages[i] = new MessageId(messageList.get(i));
+            }
+            System.out.println("List message completed");
+            return messages;
+
+        } catch (Exception e) {
+            System.out.println("FAHH: " + e.getStackTrace());
+        }
+
+        return new MessageId[0];
     }
 
     @Override
@@ -91,5 +125,5 @@ public class GRPCMessenger implements Messenger {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'listMessages'");
     }
-    
+
 }
