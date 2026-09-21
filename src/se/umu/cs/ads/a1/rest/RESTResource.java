@@ -153,6 +153,26 @@ public class RESTResource extends ServerResource {
         String path = getReference().getPath();
         if (path.contains("/store")) {
             try {
+                if (json != null && json.isArray()) {
+                    Message[] messages = new Message[json.size()];
+                    for (int i = 0; i < json.size(); i++) {
+                        JsonNode msgNode = json.get(i);
+                        String message = (msgNode.has("message")) ? msgNode.get("message").asText() : null;
+                        String username = (msgNode.has("user")) ? msgNode.get("user").asText() : null;
+                        String topicStr = (msgNode.has("topic")) ? msgNode.get("topic").asText() : null;
+                        String msgID = (msgNode.has("msgID")) ? msgNode.get("msgID").asText() : null;
+
+                        MessageId msgId = (msgID != null && !msgID.isEmpty()) ? new MessageId(msgID) : MessageId.construct();
+                        Timestamp timestamp = Timestamp.now();
+                        Content content = (message != null) ? new Content(message) : null;
+                        Username user = (username != null) ? new Username(username) : null;
+                        Topic topic = (topicStr != null) ? new Topic(topicStr) : null;
+                        messages[i] = new Message(msgId, timestamp, user, topic, content, Data.EMPTY);
+                    }
+                    messengerBackend.store(messages);
+                    return "Batch store completed: " + messages.length + " messages";
+                }
+
                 String message = (json != null && json.has("message")) ? json.get("message").asText() : null;
                 String username = (json != null && json.has("user")) ? json.get("user").asText() : null;
                 String topicStr = (json != null && json.has("topic")) ? json.get("topic").asText() : null;
@@ -170,6 +190,47 @@ public class RESTResource extends ServerResource {
                         + msg.getUsername();
             } catch (Exception E) {
                 return "Error: Could not store message: " + E.toString();
+            }
+        } else if (path.contains("/retrieve")) {
+            try {
+                if (json != null && json.isArray()) {
+                    MessageId[] messageIds = new MessageId[json.size()];
+                    for (int i = 0; i < json.size(); i++) {
+                        messageIds[i] = new MessageId(json.get(i).asText());
+                    }
+                    Message[] retrieved = messengerBackend.retrieve(messageIds);
+
+                    ObjectMapper mapper = new ObjectMapper();
+                    ArrayNode arrayNode = mapper.createArrayNode();
+                    if (retrieved != null) {
+                        for (Message msg : retrieved) {
+                            if (msg == null) continue;
+                            ObjectNode mNode = mapper.createObjectNode();
+                            if (msg.getId() != null) mNode.put("msgID", msg.getId().toString());
+                            if (msg.getTimestamp() != null) mNode.put("timeStamp", msg.getTimestamp().toString());
+                            if (msg.getUsername() != null) mNode.put("user", msg.getUsername().toString());
+                            if (msg.getTopic() != null) mNode.put("topic", msg.getTopic().toString());
+                            if (msg.getContent() != null) mNode.put("content", msg.getContent().toString());
+                            arrayNode.add(mNode);
+                        }
+                    }
+                    return arrayNode.toString();
+                }
+            } catch (Exception e) {
+                return "Error: Could not retrieve batch messages: " + e.getMessage();
+            }
+        } else if (path.contains("/delete")) {
+            try {
+                if (json != null && json.isArray()) {
+                    MessageId[] ids = new MessageId[json.size()];
+                    for (int i = 0; i < json.size(); i++) {
+                        ids[i] = new MessageId(json.get(i).asText());
+                    }
+                    messengerBackend.delete(ids);
+                    return "Batch delete completed: " + ids.length + " messages";
+                }
+            } catch (Exception e) {
+                return "Error: Could not batch delete messages: " + e.getMessage();
             }
         } else if (path.contains("/subscribe")) {
             try {
@@ -230,13 +291,15 @@ public class RESTResource extends ServerResource {
         if (path.contains("/delete")) {
             try {
                 Form form = getReference().getQueryAsForm();
-                String msgID = form.getFirstValue("msgID");
-                MessageId messageId = new MessageId(msgID);
-                messengerBackend.delete(messageId);
-                return "Message " + msgID + " deleted successfully";
+                String msgID = (form != null) ? form.getFirstValue("msgID") : null;
+                if (msgID != null && !msgID.isEmpty()) {
+                    MessageId messageId = new MessageId(msgID);
+                    messengerBackend.delete(messageId);
+                    return "Message " + msgID + " deleted successfully";
+                }
             } catch (Exception e) {
                 Form form = getReference().getQueryAsForm();
-                String msgID = form.getFirstValue("msgID");
+                String msgID = (form != null) ? form.getFirstValue("msgID") : null;
                 return "Error: Could not delete message: " + msgID;
             }
         }

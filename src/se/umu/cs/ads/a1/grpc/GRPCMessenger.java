@@ -27,9 +27,13 @@ public class GRPCMessenger implements Messenger {
 
     public GRPCMessenger(String host, int port) {
         // set up connection to server
-        this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+        this.channel = ManagedChannelBuilder.forAddress(host, port)
+                .maxInboundMessageSize(100 * 1024 * 1024)
+                .usePlaintext()
+                .build();
         // client side stub
-        this.blockingStub = MessengerServiceGrpc.newBlockingStub(channel);
+        this.blockingStub = MessengerServiceGrpc.newBlockingStub(channel)
+                .withMaxInboundMessageSize(100 * 1024 * 1024);
     }
 
     @Override
@@ -58,8 +62,24 @@ public class GRPCMessenger implements Messenger {
 
     @Override
     public void store(Message[] messages) {
-        for (Message message : messages) {
-            store(message);
+        if (messages == null || messages.length == 0) return;
+        try {
+            StoreBatchRequest.Builder builder = StoreBatchRequest.newBuilder();
+            for (Message message : messages) {
+                if (message == null) continue;
+                Msg msg = Msg.newBuilder()
+                        .setMessageID(message.getId().toString())
+                        .setTimestamp(message.getTimestamp().getValue())
+                        .setUsername(message.getUsername().toString())
+                        .setTopic(message.getTopic().toString())
+                        .setContent(message.getContent().toString())
+                        .setData(ByteString.copyFrom(message.getData().getValue()))
+                        .build();
+                builder.addMessages(msg);
+            }
+            blockingStub.storeBatch(builder.build());
+        } catch (Exception e) {
+            System.err.println("gRPC batch store error: " + e.getMessage());
         }
     }
 
@@ -70,6 +90,7 @@ public class GRPCMessenger implements Messenger {
             RetrieveResponse response = blockingStub.retrieve(request);
 
             Msg protoMsg = response.getMessage();
+            if (protoMsg == null || protoMsg.getMessageID().isEmpty()) return null;
 
             Message msg = new Message(
                     new MessageId(protoMsg.getMessageID()),
@@ -82,18 +103,39 @@ public class GRPCMessenger implements Messenger {
             return msg;
 
         } catch (Exception e) {
-            System.out.println("FAHH: " + e.getStackTrace());
+            System.err.println("gRPC retrieve error: " + e.getMessage());
         }
         return null;
     }
 
     @Override
     public Message[] retrieve(MessageId[] message) {
-        Message[] returnedMessages = new Message[message.length];
-        for (int i = 0; i < message.length; i++) {
-            returnedMessages[i] = retrieve(message[i]);
+        if (message == null || message.length == 0) return new Message[0];
+        try {
+            RetrieveBatchRequest.Builder builder = RetrieveBatchRequest.newBuilder();
+            for (MessageId id : message) {
+                if (id != null) {
+                    builder.addMessageId(id.toString());
+                }
+            }
+            RetrieveBatchResponse response = blockingStub.retrieveBatch(builder.build());
+            List<Msg> protoMsgs = response.getMessagesList();
+            Message[] returnedMessages = new Message[protoMsgs.size()];
+            for (int i = 0; i < protoMsgs.size(); i++) {
+                Msg protoMsg = protoMsgs.get(i);
+                returnedMessages[i] = new Message(
+                        new MessageId(protoMsg.getMessageID()),
+                        new Timestamp(protoMsg.getTimestamp()),
+                        new Username(protoMsg.getUsername()),
+                        new Topic(protoMsg.getTopic()),
+                        new Content(protoMsg.getContent()),
+                        new Data(protoMsg.getData().toByteArray()));
+            }
+            return returnedMessages;
+        } catch (Exception e) {
+            System.err.println("gRPC batch retrieve error: " + e.getMessage());
         }
-        return returnedMessages;
+        return new Message[0];
     }
 
     @Override
@@ -104,15 +146,24 @@ public class GRPCMessenger implements Messenger {
             String status = response.getResponse();
             System.out.println(status);
         } catch (Exception e) {
-            System.out.println("FAAAHHH: " + e.getStackTrace());
+            System.err.println("gRPC delete error: " + e.getMessage());
         }
 
     }
 
     @Override
     public void delete(MessageId[] messages) {
-        for (MessageId message : messages) {
-            delete(message);
+        if (messages == null || messages.length == 0) return;
+        try {
+            DeleteBatchRequest.Builder builder = DeleteBatchRequest.newBuilder();
+            for (MessageId msgId : messages) {
+                if (msgId != null) {
+                    builder.addMessageId(msgId.toString());
+                }
+            }
+            blockingStub.deleteBatch(builder.build());
+        } catch (Exception e) {
+            System.err.println("gRPC batch delete error: " + e.getMessage());
         }
     }
 

@@ -64,6 +64,25 @@ public class MessengerService extends MessengerServiceGrpc.MessengerServiceImplB
     }
 
     @Override
+    public void storeBatch(StoreBatchRequest request, StreamObserver<StoreResponse> responseObserver) {
+        Message[] messages = new Message[request.getMessagesCount()];
+        for (int i = 0; i < request.getMessagesCount(); i++) {
+            Msg protoMsg = request.getMessages(i);
+            messages[i] = new Message(
+                    new MessageId(protoMsg.getMessageID()),
+                    new Timestamp(protoMsg.getTimestamp()),
+                    new Username(protoMsg.getUsername()),
+                    new Topic(protoMsg.getTopic()),
+                    new Content(protoMsg.getContent()),
+                    new Data(protoMsg.getData().toByteArray()));
+        }
+        backend.store(messages);
+        StoreResponse response = StoreResponse.newBuilder().setResponse("OK").build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void delete(DeleteRequest request, StreamObserver<DeleteResponse> responseObserver) {
         MessageId id = new MessageId(request.getMessageId().toString());
 
@@ -76,25 +95,67 @@ public class MessengerService extends MessengerServiceGrpc.MessengerServiceImplB
     }
 
     @Override
+    public void deleteBatch(DeleteBatchRequest request, StreamObserver<DeleteResponse> responseObserver) {
+        MessageId[] ids = new MessageId[request.getMessageIdCount()];
+        for (int i = 0; i < request.getMessageIdCount(); i++) {
+            ids[i] = new MessageId(request.getMessageId(i));
+        }
+        backend.delete(ids);
+        DeleteResponse response = DeleteResponse.newBuilder().setResponse("Successfully Deleted Messages").build();
+        responseObserver.onNext(response);
+        responseObserver.onCompleted();
+    }
+
+    @Override
     public void retrieve(RetrieveRequest request, StreamObserver<RetrieveResponse> responseObserver) {
 
         MessageId id = new MessageId(request.getMessageId().toString());
         Message message = backend.retrieve(id);
 
-        Msg msg = Msg.newBuilder()
-            .setMessageID(message.getId().toString())
-            .setTimestamp(message.getTimestamp().getValue())
-            .setUsername(message.getUsername().toString())
-            .setTopic(message.getTopic().toString())
-            .setContent(message.getContent().toString())
-            .setData(ByteString.copyFrom(message.getData().getValue()))
-            .build();
-        
-        backend.store(message);
-        RetrieveResponse response = RetrieveResponse.newBuilder()
-                .setMessage(msg)
+        if (message != null) {
+            Msg msg = Msg.newBuilder()
+                .setMessageID(message.getId().toString())
+                .setTimestamp(message.getTimestamp().getValue())
+                .setUsername(message.getUsername().toString())
+                .setTopic(message.getTopic().toString())
+                .setContent(message.getContent().toString())
+                .setData(ByteString.copyFrom(message.getData().getValue()))
                 .build();
-        responseObserver.onNext(response);
+            
+            RetrieveResponse response = RetrieveResponse.newBuilder()
+                    .setMessage(msg)
+                    .build();
+            responseObserver.onNext(response);
+        } else {
+            responseObserver.onNext(RetrieveResponse.getDefaultInstance());
+        }
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void retrieveBatch(RetrieveBatchRequest request, StreamObserver<RetrieveBatchResponse> responseObserver) {
+        MessageId[] ids = new MessageId[request.getMessageIdCount()];
+        for (int i = 0; i < request.getMessageIdCount(); i++) {
+            ids[i] = new MessageId(request.getMessageId(i));
+        }
+        Message[] messages = backend.retrieve(ids);
+
+        RetrieveBatchResponse.Builder builder = RetrieveBatchResponse.newBuilder();
+        if (messages != null) {
+            for (Message message : messages) {
+                if (message == null) continue;
+                Msg msg = Msg.newBuilder()
+                        .setMessageID(message.getId().toString())
+                        .setTimestamp(message.getTimestamp().getValue())
+                        .setUsername(message.getUsername().toString())
+                        .setTopic(message.getTopic().toString())
+                        .setContent(message.getContent().toString())
+                        .setData(ByteString.copyFrom(message.getData().getValue()))
+                        .build();
+                builder.addMessages(msg);
+            }
+        }
+        responseObserver.onNext(builder.build());
         responseObserver.onCompleted();
     }
 

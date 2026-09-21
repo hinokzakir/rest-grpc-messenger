@@ -14,6 +14,7 @@ public class GRPCServer {
     public GRPCServer(int port) {
         this.backend = new InMemoryMessengerBackEnd();
         this.server = ServerBuilder.forPort(port)
+                .maxInboundMessageSize(100 * 1024 * 1024)
                 .addService(new MessengerService(this.backend))
                 .build();
     }

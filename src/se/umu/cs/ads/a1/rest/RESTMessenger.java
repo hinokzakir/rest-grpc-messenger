@@ -62,8 +62,27 @@ public class RESTMessenger implements Messenger {
 
     @Override
     public void store(Message[] messages) {
-        for (Message message : messages) {
-            store(message);
+        if (messages == null || messages.length == 0) return;
+        try {
+            com.fasterxml.jackson.databind.node.ArrayNode arrayNode = mapper.createArrayNode();
+            for (Message message : messages) {
+                if (message == null) continue;
+                ObjectNode jsonNode = mapper.createObjectNode();
+                if (message.getContent() != null)
+                    jsonNode.put("message", message.getContent().toString());
+                if (message.getUsername() != null)
+                    jsonNode.put("user", message.getUsername().toString());
+                if (message.getTopic() != null)
+                    jsonNode.put("topic", message.getTopic().toString());
+                if (message.getId() != null)
+                    jsonNode.put("msgID", message.getId().toString());
+                arrayNode.add(jsonNode);
+            }
+            client.setReference(serverUrl + "/store");
+            Representation response = client.post(arrayNode);
+            if (response != null) response.release();
+        } catch (Exception e) {
+            System.err.println("Error calling batch /store endpoint: " + e.getMessage());
         }
     }
 
@@ -77,30 +96,35 @@ public class RESTMessenger implements Messenger {
             client.setReference(serverUrl + "/retrieve?msgID=" + msgID);
             Representation response = client.get();
 
-            // build message from json to message object
-            JsonNode jsonNode = mapper.readTree(response.getText());
+            if (response != null) {
+                String text = response.getText();
+                response.release();
+                if (text != null && !text.isEmpty()) {
+                    JsonNode jsonNode = mapper.readTree(text);
 
-            MessageId messageId = (jsonNode.has("msgID") && !jsonNode.get("msgID").isNull())
-                    ? new MessageId(jsonNode.get("msgID").asText())
-                    : message;
-            Timestamp timeStamp = (jsonNode.has("timeStamp") && !jsonNode.get("timeStamp").isNull())
-                    ? new Timestamp(jsonNode.get("timeStamp").asLong())
-                    : Timestamp.now();
-            Username user = (jsonNode.has("user") && !jsonNode.get("user").isNull())
-                    ? new Username(jsonNode.get("user").asText())
-                    : null;
-            Topic topic = (jsonNode.has("topic") && !jsonNode.get("topic").isNull())
-                    ? new Topic(jsonNode.get("topic").asText())
-                    : null;
-            Content content = (jsonNode.has("content") && !jsonNode.get("content").isNull())
-                    ? new Content(jsonNode.get("content").asText())
-                    : null;
-            Data data = (jsonNode.has("data") && !jsonNode.get("data").isNull()
-                    && jsonNode.get("data").binaryValue() != null)
-                            ? new Data(jsonNode.get("data").binaryValue())
-                            : Data.EMPTY;
+                    MessageId messageId = (jsonNode.has("msgID") && !jsonNode.get("msgID").isNull())
+                            ? new MessageId(jsonNode.get("msgID").asText())
+                            : message;
+                    Timestamp timeStamp = (jsonNode.has("timeStamp") && !jsonNode.get("timeStamp").isNull())
+                            ? new Timestamp(jsonNode.get("timeStamp").asLong())
+                            : Timestamp.now();
+                    Username user = (jsonNode.has("user") && !jsonNode.get("user").isNull())
+                            ? new Username(jsonNode.get("user").asText())
+                            : null;
+                    Topic topic = (jsonNode.has("topic") && !jsonNode.get("topic").isNull())
+                            ? new Topic(jsonNode.get("topic").asText())
+                            : null;
+                    Content content = (jsonNode.has("content") && !jsonNode.get("content").isNull())
+                            ? new Content(jsonNode.get("content").asText())
+                            : null;
+                    Data data = (jsonNode.has("data") && !jsonNode.get("data").isNull()
+                            && jsonNode.get("data").binaryValue() != null)
+                                    ? new Data(jsonNode.get("data").binaryValue())
+                                    : Data.EMPTY;
 
-            return new Message(messageId, timeStamp, user, topic, content, data);
+                    return new Message(messageId, timeStamp, user, topic, content, data);
+                }
+            }
 
         } catch (Exception e) {
             System.err.println("Error calling /retrieve endpoint: " + e.getMessage());
@@ -110,11 +134,46 @@ public class RESTMessenger implements Messenger {
 
     @Override
     public Message[] retrieve(MessageId[] messages) {
-        Message[] returnedMessages = new Message[messages.length];
-        for (int i = 0; i < messages.length; i++) {
-            returnedMessages[i] = retrieve(messages[i]);
+        if (messages == null || messages.length == 0) return new Message[0];
+        try {
+            com.fasterxml.jackson.databind.node.ArrayNode arrayNode = mapper.createArrayNode();
+            for (MessageId msgId : messages) {
+                if (msgId != null) arrayNode.add(msgId.toString());
+            }
+            client.setReference(serverUrl + "/retrieve");
+            Representation response = client.post(arrayNode);
+            if (response != null) {
+                String text = response.getText();
+                response.release();
+                if (text != null && !text.isEmpty()) {
+                    JsonNode jsonArray = mapper.readTree(text);
+                    if (jsonArray != null && jsonArray.isArray()) {
+                        Message[] returnedMessages = new Message[jsonArray.size()];
+                        for (int i = 0; i < jsonArray.size(); i++) {
+                            JsonNode jsonNode = jsonArray.get(i);
+                            MessageId messageId = (jsonNode.has("msgID") && !jsonNode.get("msgID").isNull())
+                                    ? new MessageId(jsonNode.get("msgID").asText()) : null;
+                            Timestamp timeStamp = (jsonNode.has("timeStamp") && !jsonNode.get("timeStamp").isNull())
+                                    ? new Timestamp(jsonNode.get("timeStamp").asLong()) : Timestamp.now();
+                            Username user = (jsonNode.has("user") && !jsonNode.get("user").isNull())
+                                    ? new Username(jsonNode.get("user").asText()) : null;
+                            Topic topic = (jsonNode.has("topic") && !jsonNode.get("topic").isNull())
+                                    ? new Topic(jsonNode.get("topic").asText()) : null;
+                            Content content = (jsonNode.has("content") && !jsonNode.get("content").isNull())
+                                    ? new Content(jsonNode.get("content").asText()) : null;
+                            Data data = (jsonNode.has("data") && !jsonNode.get("data").isNull()
+                                    && jsonNode.get("data").binaryValue() != null)
+                                            ? new Data(jsonNode.get("data").binaryValue()) : Data.EMPTY;
+                            returnedMessages[i] = new Message(messageId, timeStamp, user, topic, content, data);
+                        }
+                        return returnedMessages;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error calling batch /retrieve endpoint: " + e.getMessage());
         }
-        return returnedMessages;
+        return new Message[0];
     }
 
     @Override
@@ -129,9 +188,9 @@ public class RESTMessenger implements Messenger {
             Representation response = client.delete();
 
             if (response != null) {
-                System.out.println("Delete Server Response: " + response.getText());
+                String text = response.getText();
+                response.release();
             }
-            client.release();
         } catch (Exception e) {
             System.err.println("Error calling /delete endpoint: " + e.getMessage());
             e.printStackTrace();
@@ -140,8 +199,17 @@ public class RESTMessenger implements Messenger {
 
     @Override
     public void delete(MessageId[] messages) {
-        for (MessageId message : messages) {
-            delete(message);
+        if (messages == null || messages.length == 0) return;
+        try {
+            com.fasterxml.jackson.databind.node.ArrayNode arrayNode = mapper.createArrayNode();
+            for (MessageId msgId : messages) {
+                if (msgId != null) arrayNode.add(msgId.toString());
+            }
+            client.setReference(serverUrl + "/delete");
+            Representation response = client.post(arrayNode);
+            if (response != null) response.release();
+        } catch (Exception e) {
+            System.err.println("Error calling batch /delete endpoint: " + e.getMessage());
         }
     }
 

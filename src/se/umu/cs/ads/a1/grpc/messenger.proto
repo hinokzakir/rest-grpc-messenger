@@ -11,8 +11,11 @@ service MessengerService {
     rpc ListMessages (ListMessagesRequest) returns (ListMessagesResponse);
     rpc ListMessagesTopic (TopicRequest) returns (ListMessagesResponse);
     rpc Store (StoreRequest) returns (StoreResponse);
+    rpc StoreBatch (StoreBatchRequest) returns (StoreResponse);
     rpc Delete (DeleteRequest) returns (DeleteResponse);
+    rpc DeleteBatch (DeleteBatchRequest) returns (DeleteResponse);
     rpc Retrieve (RetrieveRequest) returns (RetrieveResponse);
+    rpc RetrieveBatch (RetrieveBatchRequest) returns (RetrieveBatchResponse);
     rpc Subscribe (SubscribeRequest) returns (SubscribeResponse);
     rpc Unsubscribe (SubscribeRequest) returns (SubscribeResponse);
     rpc ListUsers (Empty) returns (ListUsersResponse);
@@ -40,12 +43,24 @@ message StoreRequest {
     Msg message = 1;
 }
 
+message StoreBatchRequest {
+    repeated Msg messages = 1;
+}
+
 message DeleteRequest {
     string messageId = 1;
 }
 
-message RetrieveRequest{
+message DeleteBatchRequest {
+    repeated string messageId = 1;
+}
+
+message RetrieveRequest {
     string messageId = 1;
+}
+
+message RetrieveBatchRequest {
+    repeated string messageId = 1;
 }
 
 message SubscribeRequest {
@@ -70,7 +85,6 @@ message ListMessagesResponse {
     repeated string messageID = 1;
 }
 
-
 message StoreResponse {
     string response = 1;
 }
@@ -79,8 +93,12 @@ message DeleteResponse {
     string response = 1;
 }
 
-message RetrieveResponse{
+message RetrieveResponse {
     Msg message = 1;
+}
+
+message RetrieveBatchResponse {
+    repeated Msg messages = 1;
 }
 
 message SubscribeResponse {
