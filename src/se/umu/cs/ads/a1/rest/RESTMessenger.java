@@ -51,7 +51,7 @@ public class RESTMessenger implements Messenger {
             Representation response = client.post(jsonNode);
 
             if (response != null) {
-                System.out.println("Store Server Response: " + response.getText());
+                //System.out.println("Store Server Response: " + response.getText());
             }
             client.release();
         } catch (Exception e) {
@@ -160,17 +160,20 @@ public class RESTMessenger implements Messenger {
             Representation response = client.post(jsonNode);
 
             if (response != null) {
-                System.out.println("Subscribe Server Response: " + response.getText());
-            }
-
-            // create a topic array of response
-            JsonNode jsonArray = mapper.readTree(response.getText());
-            Topic[] topics = new Topic[jsonArray.size()];
-            for (int i = 0; i < jsonArray.size(); i++) {
-                topics[i] = new Topic(jsonArray.get(i).asText());
+                String text = response.getText();
+                if (text != null && !text.isEmpty()) {
+                    JsonNode jsonArray = mapper.readTree(text);
+                    if (jsonArray != null && jsonArray.isArray()) {
+                        Topic[] topics = new Topic[jsonArray.size()];
+                        for (int i = 0; i < jsonArray.size(); i++) {
+                            topics[i] = new Topic(jsonArray.get(i).asText());
+                        }
+                        client.release();
+                        return topics;
+                    }
+                }
             }
             client.release();
-            return topics;
         } catch (Exception e) {
             System.err.println("Error calling /subscribe endpoint: " + e.getMessage());
             e.printStackTrace();
@@ -192,19 +195,22 @@ public class RESTMessenger implements Messenger {
             Representation response = client.post(jsonNode);
 
             if (response != null) {
-                System.out.println("Subscribe Server Response: " + response.getText());
-            }
-
-            // create a topic array of response
-            JsonNode jsonArray = mapper.readTree(response.getText());
-            Topic[] topics = new Topic[jsonArray.size()];
-            for (int i = 0; i < jsonArray.size(); i++) {
-                topics[i] = new Topic(jsonArray.get(i).asText());
+                String text = response.getText();
+                if (text != null && !text.isEmpty()) {
+                    JsonNode jsonArray = mapper.readTree(text);
+                    if (jsonArray != null && jsonArray.isArray()) {
+                        Topic[] topics = new Topic[jsonArray.size()];
+                        for (int i = 0; i < jsonArray.size(); i++) {
+                            topics[i] = new Topic(jsonArray.get(i).asText());
+                        }
+                        client.release();
+                        return topics;
+                    }
+                }
             }
             client.release();
-            return topics;
         } catch (Exception e) {
-            System.err.println("Error calling /subscribe endpoint: " + e.getMessage());
+            System.err.println("Error calling /unsubscribe endpoint: " + e.getMessage());
             e.printStackTrace();
         }
 

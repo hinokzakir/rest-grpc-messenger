@@ -49,7 +49,7 @@ public class GRPCMessenger implements Messenger {
             StoreResponse response = blockingStub.store(request);
 
             String responseStr = response.getResponse();
-            System.out.println(responseStr);
+            //System.out.println(responseStr);
 
         } catch (Exception e) {
             System.out.println("FAHH: " + e.getStackTrace());
@@ -251,7 +251,7 @@ public class GRPCMessenger implements Messenger {
             for (int i = 0; i < messageList.size(); i++) {
                 messages[i] = new MessageId(messageList.get(i));
             }
-            System.out.println("List message completed");
+            //System.out.println("List message completed");
             return messages;
 
         } catch (Exception e) {
@@ -274,7 +274,7 @@ public class GRPCMessenger implements Messenger {
             for (int i = 0; i < messageList.size(); i++) {
                 messages[i] = new MessageId(messageList.get(i));
             }
-            System.out.println("List message completed");
+            //System.out.println("List message completed");
             return messages;
 
         } catch (Exception e) {
