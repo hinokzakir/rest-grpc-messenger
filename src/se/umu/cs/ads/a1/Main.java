@@ -45,11 +45,7 @@ public class Main
       if (Util.containsFlag(args,"-perf"))
       {
         PerformanceTest test = new PerformanceTest(messenger);
-
-        System.out.println("testing retrieval performance...");
-        test.testMessageRetrieval(username,1000,1024);
-        test.testMessageRetrieval(username,100000,1024);
-        test.testMessageRetrieval(username,10000000,1024);
+        test.runBenchmarkSuite(username, "performance_results.csv");
       }
     }
     catch (Exception e)
